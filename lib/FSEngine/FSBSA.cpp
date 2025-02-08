@@ -42,6 +42,12 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../LZ4F/lz4.h"
 #include "../LZ4F/lz4frame.h"
 
+#ifdef __linux__
+#include <linux/limits.h>
+	#define MAX_PATH PATH_MAX
+#endif
+
+
 
 wxUint32 BSA::BSAFile::size() const {
 	if (sizeFlags > 0) {

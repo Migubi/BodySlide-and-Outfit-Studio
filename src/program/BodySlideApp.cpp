@@ -28,6 +28,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <concurrent_unordered_map.h>
 #include <ppl.h>
 #include <ppltasks.h>
+#elif __linux__
+#include "../files/LinuxDir.h"
+#include <tbb/tbb.h>
 #else
 #undef _PPL_H
 #endif
@@ -111,6 +114,8 @@ bool BodySlideApp::OnInit() {
 
 #ifdef _DEBUG
 	std::string dataDir{wxGetCwd().ToUTF8()};
+#elif __linux__
+    std::string dataDir{get_selfpathBS()};
 #else
 	std::string dataDir{wxStandardPaths::Get().GetDataDir().ToUTF8()};
 #endif
@@ -1001,6 +1006,8 @@ void BodySlideApp::EditProject(const std::string& projectName) {
 void BodySlideApp::LaunchOutfitStudio(const wxString& args) {
 #ifdef WIN64
 	const wxString osExec = "OutfitStudio x64.exe";
+#elif __linux__
+	const wxString osExec = "OutfitStudio";
 #else
 	const wxString osExec = "OutfitStudio.exe";
 #endif
@@ -2359,7 +2366,7 @@ int BodySlideApp::BuildBodies(bool localPath, bool clean, bool tri, bool forceNo
 }
 
 int BodySlideApp::BuildListBodies(
-	std::vector<std::string>& outfitList, std::map<std::string, std::string>& failedOutfits, bool clean, bool tri, bool forceNormals, const std::string& custPath) {
+    std::vector<std::string>& outfitList, std::map<std::string, std::string>& failedOutfits, bool clean, bool tri, bool forceNormals, const std::string& custPath) {
 	std::string datapath = custPath;
 
 	wxLogMessage("Started batch build with options: Custom Path = %s, Cleaning = %s, TRI = %s",
@@ -2523,7 +2530,9 @@ int BodySlideApp::BuildListBodies(
 
 #ifdef _PPL_H
 	concurrency::concurrent_unordered_map<std::string, std::string> failedOutfitsCon;
-#else
+#elif __linux__
+    tbb::concurrent_unordered_map<std::string, std::string> failedOutfitsCon;
+#elif
 	std::unordered_map<std::string, std::string> failedOutfitsCon;
 #endif
 
@@ -2904,6 +2913,22 @@ int BodySlideApp::BuildListBodies(
 		Yield();
 		wxMilliSleep(100);
 	}
+#elif __linux__
+    tbb::task_group buildTask;
+    std::atomic<bool> done{false};
+        buildTask.run([&] {
+            tbb::parallel_for_each(outfitList.begin(), outfitList.end(), [&](std::string& outfit) {
+                buildOutfit(outfit);
+
+            });
+            done = true;
+        });
+
+    while (!done.load()) {
+        std::this_thread::yield();
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+    buildTask.wait();
 #else
 	for (auto& outfit : outfitList) {
 		buildOutfit(outfit);

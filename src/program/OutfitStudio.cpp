@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "PresetSaveDialog.h"
 #include "ShapeProperties.h"
 #include "SliderDataImportDialog.h"
+#include "../files/LinuxDir.h"
 
 #include <sstream>
 #include <wx/debugrpt.h>
@@ -353,7 +354,9 @@ bool OutfitStudio::OnInit() {
 
 #ifdef _DEBUG
 	std::string dataDir{wxGetCwd().ToUTF8()};
-#else
+#elif __linux__
+    std::string dataDir{get_selfpathOS()};
+#elif
 	std::string dataDir{wxStandardPaths::Get().GetDataDir().ToUTF8()};
 #endif
 
@@ -691,6 +694,7 @@ bool OutfitStudio::SetDefaultConfig() {
 bool OutfitStudio::ShowSetup() {
 	wxXmlResource* xrc = wxXmlResource::Get();
 	bool loaded = xrc->Load(wxString::FromUTF8(Config["AppDir"]) + "/res/xrc/Setup.xrc");
+    wxMessageBox("path is :" + Config["AppDir"]);
 	if (!loaded) {
 		wxMessageBox("Failed to load Setup.xrc file!", "Error", wxICON_ERROR);
 		return false;

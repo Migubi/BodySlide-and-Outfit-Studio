@@ -12,6 +12,10 @@ See the included LICENSE file
 #include <fstream>
 #include <string>
 
+#ifdef __linux__
+#include <cstdint>
+#endif
+
 namespace PlatformUtil {
 #ifdef _WINDOWS
 // ACP wide to multibyte

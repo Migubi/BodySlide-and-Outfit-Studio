@@ -3,12 +3,19 @@ cmake_minimum_required(VERSION 3.11)
 project(BSOS)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=thread")
+set(CMAKE_EXE_LINK_FLAGS "${CMAKE_EXE_LINK_FLAGS} -fsanitize=thread")
 
 find_package(wxWidgets REQUIRED gl core base net xrc adv qa html propgrid)
 find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
-set(fbxsdk_dir ../fbxsdk)
-find_library(fbxsdk fbxsdk PATHS ${fbxsdk_dir}/lib/gcc/x64/release)
+set(fbxsdk_dir /home/michael/Git/fbxsdk)
+find_library(fbxsdk fbxsdk PATHS ${fbxsdk_dir}/lib/release)
+
+if(LINUX)
+    find_package(TBB REQUIRED)
+    include_directories(BEFORE /usr/include/directx)
+endif()
 
 set(commonsources
 	lib/FSEngine/FSBSA.cpp
@@ -26,6 +33,7 @@ set(commonsources
 	lib/nifly/src/Factory.cpp
 	lib/nifly/src/Geometry.cpp
 	lib/nifly/src/NifFile.cpp
+        lib/nifly/src/NifUtil.cpp
 	lib/nifly/src/Nodes.cpp
 	lib/nifly/src/Object3d.cpp
 	lib/nifly/src/Objects.cpp
@@ -51,6 +59,8 @@ set(commonsources
 	src/files/MaterialFile.cpp
 	src/files/ResourceLoader.cpp
 	src/files/TriFile.cpp
+        src/files/SFMorphFile.cpp
+        src/files/LinuxDir.cpp
 	src/program/GroupManager.cpp
 	src/program/PresetSaveDialog.cpp
 	src/render/GLExtensions.cpp
@@ -101,6 +111,13 @@ add_executable(OutfitStudio ${OSsources})
 add_executable(BodySlide ${BSsources})
 
 include(${wxWidgets_USE_FILE})
+if (LINUX)
+    target_include_directories(BodySlide SYSTEM PRIVATE
+        /usr/include/tbb
+        )
+        target_link_libraries(BodySlide TBB::tbb)
+endif()
+
 target_include_directories(OutfitStudio SYSTEM PRIVATE
 	${fbxsdk_dir}/include
 	/usr/include/wine/windows

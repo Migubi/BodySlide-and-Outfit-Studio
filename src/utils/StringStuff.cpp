@@ -1,6 +1,9 @@
 #include "StringStuff.h"
 #include <cctype>
 #include <sstream>
+#ifdef __linux__
+	#include <iterator>
+#endif
 
 bool StringsEqualNInsens(const char* a, const char* b, int len) {
 	while (len > 0) {
