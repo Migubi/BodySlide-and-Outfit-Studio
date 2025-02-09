@@ -1,5 +1,6 @@
 #include "StringStuff.h"
 #include <cctype>
+#include <iterator>
 #include <sstream>
 
 bool StringsEqualNInsens(const char* a, const char* b, int len) {
@@ -64,7 +65,7 @@ std::string JoinStrings(const std::vector<std::string>& elements, const char* co
 		case 1: return elements[0];
 		default:
 			std::ostringstream os;
-			std::copy(elements.begin(), elements.end() - 1, std::ostream_iterator<std::string>(os, separator));
+            std::copy(elements.begin(), elements.end() - 1, std::ostream_iterator<std::string>(os, separator));
 			os << *elements.rbegin();
 			return os.str();
 	}

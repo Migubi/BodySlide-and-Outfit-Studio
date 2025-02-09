@@ -28,7 +28,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <concurrent_unordered_map.h>
 #include <ppl.h>
 #include <ppltasks.h>
-#else
+#elif __linux__
+#include "../files/LinuxDir.h"
+#elif
 #undef _PPL_H
 #endif
 
@@ -111,6 +113,8 @@ bool BodySlideApp::OnInit() {
 
 #ifdef _DEBUG
 	std::string dataDir{wxGetCwd().ToUTF8()};
+#elif __linux__
+    std::string dataDir{get_selfpath()};
 #else
 	std::string dataDir{wxStandardPaths::Get().GetDataDir().ToUTF8()};
 #endif
@@ -1001,6 +1005,8 @@ void BodySlideApp::EditProject(const std::string& projectName) {
 void BodySlideApp::LaunchOutfitStudio(const wxString& args) {
 #ifdef WIN64
 	const wxString osExec = "OutfitStudio x64.exe";
+#elif __linux__
+    const wxString osExec = "OutfitStudio";
 #else
 	const wxString osExec = "OutfitStudio.exe";
 #endif

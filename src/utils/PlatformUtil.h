@@ -5,6 +5,7 @@ See the included LICENSE file
 
 #pragma once
 
+#include <cstdint>
 #ifdef _WINDOWS
 #include <Windows.h>
 #endif

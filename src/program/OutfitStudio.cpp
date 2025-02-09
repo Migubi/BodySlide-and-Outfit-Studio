@@ -29,6 +29,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "ShapeProperties.h"
 #include "SliderDataImportDialog.h"
 
+#if __linux__
+#include "../files/LinuxDir.h"
+#endif
+
 #include <sstream>
 #include <wx/debugrpt.h>
 #include <wx/wfstream.h>
@@ -353,6 +357,8 @@ bool OutfitStudio::OnInit() {
 
 #ifdef _DEBUG
 	std::string dataDir{wxGetCwd().ToUTF8()};
+#elif __linux__
+    std::string dataDir{get_selfpath()};
 #else
 	std::string dataDir{wxStandardPaths::Get().GetDataDir().ToUTF8()};
 #endif
