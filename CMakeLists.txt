@@ -112,10 +112,11 @@ add_executable(BodySlide ${BSsources})
 
 include(${wxWidgets_USE_FILE})
 if (LINUX)
-    target_include_directories(BodySlide SYSTEM PRIVATE
-        /usr/include/tbb
-        )
-        target_link_libraries(BodySlide TBB::tbb)
+    target_include_directories(BodySlide SYSTEM PRIVATE /usr/include/oneapi)
+    target_include_directories(OutfitStudio SYSTEM PRIVATE /usr/include/oneapi)
+    target_link_libraries(BodySlide TBB::tbb)
+    target_link_libraries(OutfitStudio TBB::tbb)
+
 endif()
 
 target_include_directories(OutfitStudio SYSTEM PRIVATE

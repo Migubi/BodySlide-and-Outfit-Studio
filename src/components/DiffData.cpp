@@ -11,9 +11,13 @@ See the included LICENSE file
 #include <algorithm>
 #include <fstream>
 
+
 #ifdef WIN64
 #include <concurrent_unordered_map.h>
 #include <ppl.h>
+#elif __linux__
+#undef _PLL_H
+#include <tbb/tbb.h>
 #else
 #undef _PPL_H
 #endif
@@ -178,7 +182,6 @@ int DiffDataSets::LoadSet(const std::string& name, const std::string& target, co
 
 	return 0;
 }
-
 bool DiffDataSets::LoadData(const std::map<std::string, std::map<std::string, std::string>>& osdNames) {
 #ifdef _PPL_H
 	Concurrency::concurrent_unordered_map<std::string, std::unique_ptr<OSDataFile>> loaded;
@@ -189,6 +192,16 @@ bool DiffDataSets::LoadData(const std::map<std::string, std::map<std::string, st
 
 		loaded[osd.first] = std::move(osdFile);
 	});
+#elif __linux__
+    tbb::concurrent_unordered_map<std::string, std::unique_ptr<OSDataFile>> loaded;
+    tbb::parallel_for_each(osdNames.begin(), osdNames.end(), [&](auto& osd) {
+        auto osdFile = std::make_unique<OSDataFile>();
+        if (!osdFile->Read(osd.first)) {
+            return; // Early exit if reading fails
+        }
+
+        loaded.insert({osd.first, std::move(osdFile)}); // Insert, discarding if already present
+    });
 #endif
 	for (auto& osd : osdNames) {
 #ifdef _PPL_H
@@ -197,6 +210,12 @@ bool DiffDataSets::LoadData(const std::map<std::string, std::map<std::string, st
 			continue;
 
 		auto& osdFile = kvp->second;
+#elif __linux__
+        auto kvp = loaded.find(osd.first);
+        if (kvp == loaded.end())
+            continue;
+
+        auto& osdFile = kvp->second;
 #else
 		auto osdFile = std::make_unique<OSDataFile>();
 		if (!osdFile->Read(osd.first))

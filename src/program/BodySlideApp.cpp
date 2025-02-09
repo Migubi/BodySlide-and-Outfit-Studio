@@ -29,6 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <ppl.h>
 #include <ppltasks.h>
 #elif __linux__
+#undef _PLL_H
 #include "../files/LinuxDir.h"
 #include <tbb/tbb.h>
 #else
@@ -115,7 +116,7 @@ bool BodySlideApp::OnInit() {
 #ifdef _DEBUG
 	std::string dataDir{wxGetCwd().ToUTF8()};
 #elif __linux__
-    std::string dataDir{get_selfpathBS()};
+    std::string dataDir{wxGetCwd().ToUTF8()};
 #else
 	std::string dataDir{wxStandardPaths::Get().GetDataDir().ToUTF8()};
 #endif
@@ -2914,21 +2915,9 @@ int BodySlideApp::BuildListBodies(
 		wxMilliSleep(100);
 	}
 #elif __linux__
-    tbb::task_group buildTask;
-    std::atomic<bool> done{false};
-        buildTask.run([&] {
-            tbb::parallel_for_each(outfitList.begin(), outfitList.end(), [&](std::string& outfit) {
-                buildOutfit(outfit);
 
-            });
-            done = true;
-        });
+    tbb::parallel_for_each(outfitList.begin(), outfitList.end(), buildOutfit);
 
-    while (!done.load()) {
-        std::this_thread::yield();
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    }
-    buildTask.wait();
 #else
 	for (auto& outfit : outfitList) {
 		buildOutfit(outfit);
